@@ -1,0 +1,6 @@
+name: Mr. Milu Import
+type: module
+description: Connection with Google Drive to import content
+package: Mr. Milú
+core_version_requirement: ^8.8.0 || ^9
+version: 1.0.0

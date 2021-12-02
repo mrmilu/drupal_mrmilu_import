@@ -1,0 +1,5 @@
+{
+    "name": "mrmilu/mrmilu_import",
+    "description": "Connection with Google Drive to import content",
+    "type": "drupal-mrmilu-module"
+}
