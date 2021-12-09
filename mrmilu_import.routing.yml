@@ -1,0 +1,9 @@
+mrmilu_import.configuration:
+  path: '/admin/mrmilu/import'
+  defaults:
+    _form: '\Drupal\mrmilu_import\Form\MrMiluImportForm'
+    _title: 'Import form'
+  requirements:
+    _permission: 'access administration pages'
+  options:
+    _admin_route: TRUE
