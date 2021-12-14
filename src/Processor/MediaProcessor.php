@@ -44,10 +44,22 @@ class MediaProcessor {
     return $file->id();
   }
 
-  public function createMedia($filePath, $bundle, $fieldName) {
+  public function createMediaFromPath($filePath, $bundle, $fieldName) {
     $fileID = $this->processExternal($filePath, 'media', $bundle, $fieldName);
     $fileName = $this->getFilename($filePath);
 
+    return $this->createMedia($fileID, $fileName, $bundle, $fieldName);
+  }
+
+  public function createMediaFromDrive($files, $fileDriveID, $bundle, $fieldName) {
+    $fileProperties = $files[$fileDriveID];
+    $destination = $this->fileDestination('media', $bundle, $fieldName);
+    $file = file_save_data($fileProperties['content'], $destination . $fileProperties['filename']);
+
+    return $this->createMedia($file->id(), $fileProperties['filename'], $bundle, $fieldName);
+  }
+
+  private function createMedia($fileID, $fileName, $bundle, $fieldName) {
     $media = Media::create([
       'bundle' => $bundle,
       'uid' => \Drupal::currentUser()->id(),

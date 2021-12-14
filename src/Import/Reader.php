@@ -4,6 +4,7 @@ namespace Drupal\mrmilu_import\Import;
 
 use Drupal\Core\Site\Settings;
 use Google\Client;
+use Google_Service_Drive;
 use Google_Service_Sheets;
 
 class Reader {
@@ -12,6 +13,8 @@ class Reader {
   protected $credentialsPath;
   protected $client;
   protected $gsheets;
+  protected $driveService;
+  protected $files;
 
   /**
    * @throws \Google\Exception
@@ -21,6 +24,8 @@ class Reader {
     $this->authConfigFile = Settings::get('drive_auth_config',);  //credentials.json
     $this->client = $this->initClient();
     $this->gsheets = new Google_Service_Sheets($this->client);
+    $this->driveService = new Google_Service_Drive($this->client);
+    $this->files = $this->driveService->files;
   }
 
   /**
@@ -30,7 +35,7 @@ class Reader {
   {
     $client = new Client();
     $client->setApplicationName('Mrmilu importer');
-    $client->setScopes(Google_Service_Sheets::SPREADSHEETS_READONLY);
+    $client->setScopes(Google_Service_Drive::DRIVE_READONLY);
     $client->setAuthConfig($this->authConfigFile);
     $client->setAccessType('offline');
 
@@ -65,5 +70,20 @@ class Reader {
 
     $response = $this->gsheets->spreadsheets_values->get($spreadsheetId, $r);
     return $response->getValues();
+  }
+
+  public function getFile($fileID) {
+    $optParams = [
+      'supportsAllDrives' => true,
+      'supportsTeamDrives' => true,
+    ];
+
+    $fileDrive = $this->files->get($fileID, $optParams);
+    $fileResponse = $this->files->get($fileID, ['alt' => 'media']);
+
+    return [
+      'filename' => $fileDrive->getName(),
+      'content' => $fileResponse->getBody()->getContents()
+    ];
   }
 }

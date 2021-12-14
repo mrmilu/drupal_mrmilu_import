@@ -35,11 +35,11 @@ class MrMiluImportForm extends FormBase {
     }
 
     if (!file_exists($this->credentialsPath) || $this->client->isAccessTokenExpired()) {
-      $authUrl = $this->client->createAuthUrl();
+      $authUrl = urldecode($this->client->createAuthUrl());
 
       $form['drive_markup'] = [
         '#type' => 'markup',
-        '#markup' => t('Click <a href="@url">here</a> and paste code param', ['@url' => $authUrl])
+        '#markup' => t('Click <a href="@url" target="_blank">here</a> and paste code param', ['@url' => $authUrl])
       ];
 
       $form['drive_token'] = [
@@ -68,7 +68,7 @@ class MrMiluImportForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $token = $form_state->getValue('drive_token');
-    $authCode = trim($token);
+    $authCode = urldecode(trim($token));
 
     // Exchange authorization code for an access token.
     $accessToken = $this->client->fetchAccessTokenWithAuthCode($authCode);
