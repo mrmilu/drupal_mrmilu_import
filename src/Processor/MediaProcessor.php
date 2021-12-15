@@ -7,6 +7,41 @@ use Drupal\media\Entity\Media;
 
 class MediaProcessor {
 
+  public function createMediaFromPath($filePath, $bundle, $fieldName) {
+    $fileID = $this->processExternal($filePath, 'media', $bundle, $fieldName);
+    $fileName = $this->getFilename($filePath);
+
+    return $this->createMedia($fileID, $fileName, $bundle, $fieldName);
+  }
+
+  public function createMediaFromDrive($fileProperties, $bundle, $fieldName) {
+    $destination = $this->fileDestination('media', $bundle, $fieldName);
+    $file = file_save_data($fileProperties['content'], $destination . $fileProperties['filename']);
+
+    return $this->createMedia($file->id(), $fileProperties['filename'], $bundle, $fieldName);
+  }
+
+  public function createFileFromDrive($fileProperties, $entityType, $bundle, $fieldName) {
+    $destination = $this->fileDestination($entityType, $bundle, $fieldName);
+    $file = file_save_data($fileProperties['content'], $destination . $fileProperties['filename']);
+    return $file->id();
+  }
+
+  public function ogPathFromDrive($fileProperties) {
+    $directory = 'public://og';
+    \Drupal::service('file_system')->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
+    $file = file_save_data($fileProperties['content'], $directory . '/' .$fileProperties['filename']);
+
+    if ($file) {
+      $fileUri = $file->getFileUri();
+      return file_url_transform_relative(file_create_url($fileUri));
+    }
+    return NULL;
+  }
+
+  /**
+   * Private functions
+   */
   private function fileDestination($entityType, $bundle, $fieldName) {
     $entityManager = \Drupal::service('entity_field.manager');
     $fields = $entityManager->getFieldDefinitions($entityType, $bundle);
@@ -28,35 +63,13 @@ class MediaProcessor {
     return end($filename);
   }
 
-  public function processInternal($filename, $subfolder) {
-    $filePath = join('/', [$subfolder, $filename]);
-    $doc = file_get_contents($filePath);
-    $file = file_save_data($doc, 'public://' . $filename);
-    return $file->id();
-  }
-
-  public function processExternal($filePath, $entityType, $bundle, $fieldName) {
+  private function processExternal($filePath, $entityType, $bundle, $fieldName) {
     $filename = $this->getFilename($filePath);
 
     $doc = file_get_contents($filePath);
     $destination = $this->fileDestination($entityType, $bundle, $fieldName);
     $file = file_save_data($doc, $destination . $filename);
     return $file->id();
-  }
-
-  public function createMediaFromPath($filePath, $bundle, $fieldName) {
-    $fileID = $this->processExternal($filePath, 'media', $bundle, $fieldName);
-    $fileName = $this->getFilename($filePath);
-
-    return $this->createMedia($fileID, $fileName, $bundle, $fieldName);
-  }
-
-  public function createMediaFromDrive($files, $fileDriveID, $bundle, $fieldName) {
-    $fileProperties = $files[$fileDriveID];
-    $destination = $this->fileDestination('media', $bundle, $fieldName);
-    $file = file_save_data($fileProperties['content'], $destination . $fileProperties['filename']);
-
-    return $this->createMedia($file->id(), $fileProperties['filename'], $bundle, $fieldName);
   }
 
   private function createMedia($fileID, $fileName, $bundle, $fieldName) {
